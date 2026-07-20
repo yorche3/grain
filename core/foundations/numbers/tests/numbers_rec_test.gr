@@ -1,0 +1,48 @@
+module NumbersRecursiveTest
+
+from "../src/numbers.gr" include Numbers
+from "./testing.gr" include Testing
+
+use Numbers.*
+use Testing.*
+
+let testSuite = [
+  {
+    name: "sumFirstNRec",
+    cases: [
+      { result: sumFirstNRec(0), expected: 0 },
+      { result: sumFirstNRec(3), expected: 6 },
+    ]
+  },
+  {
+    name: "factorialRec",
+    cases: [
+      { result: factorialRec(0), expected: 1 },
+      { result: factorialRec(4), expected: 24 },
+    ]
+  },
+  {
+    name: "fibonacciRec",
+    cases: [
+      { result: fibonacciRec(0), expected: 0 },
+      { result: fibonacciRec(1), expected: 1 },
+      { result: fibonacciRec(6), expected: 8 },
+    ]
+  },
+  {
+    name: "greatestCommonDivisorRec",
+    cases: [
+      { result: greatestCommonDivisorRec(12, 8), expected: 4 },
+      { result: greatestCommonDivisorRec(7, 5), expected: 1 },
+    ]
+  },
+  {
+    name: "leastCommonMultipleRec",
+    cases: [
+      { result: leastCommonMultipleRec(4, 6), expected: 12 },
+      { result: leastCommonMultipleRec(6, 8), expected: 24 },
+    ]
+  }
+]
+
+runTests(testSuite)

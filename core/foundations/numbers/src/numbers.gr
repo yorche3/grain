@@ -1,0 +1,133 @@
+module Numbers
+
+provide let rec sumFirstNRec = (n) => {
+    if (n == 0) {
+        return 0
+    } else {
+        return n + sumFirstNRec(n - 1)
+    }
+}
+
+provide let rec factorialRec = (n) => {
+    if (n <= 1) {
+        return 1
+    } else {
+        return n * factorialRec(n - 1)
+    }
+}
+
+provide let rec fibonacciRec = (n) => {
+    if (n <= 1) {
+        return n
+    } else {
+        return fibonacciRec(n - 1) + fibonacciRec(n - 2)
+    }
+}
+
+provide let rec greatestCommonDivisorRec = (a, b) => {
+    if (b == 0) {
+        return a
+    } else {
+        return greatestCommonDivisorRec(b, a % b)
+    }
+}
+
+provide let rec leastCommonMultipleRec = (a, b) => {
+    return (a * b) / greatestCommonDivisorRec(a, b)
+}
+
+provide let sumFirstNAcc = (n) => {
+    let rec sumFirstHelp = (i, acc) => {
+        if (i > n) {
+            return acc
+        } else {
+            return sumFirstHelp(i + 1, acc + i)
+        }
+    }
+    sumFirstHelp(1, 0)
+}
+
+provide let factorialAcc = (n) => {
+    let rec factorialHelp = (i, acc) => {
+        if (i > n) {
+            return acc
+        } else {
+            return factorialHelp(i + 1, acc * i)
+        }
+    }
+    factorialHelp(1, 1)
+}
+
+provide let fibonacciAcc = (n) => {
+    let rec fibonacciHelp = (remaining, acc2, acc1) => {
+        if (remaining <= 0) {
+            return acc2
+        } else {
+            return fibonacciHelp(remaining - 1, acc1, acc1 + acc2)
+        }
+    }
+    fibonacciHelp(n, 0, 1)
+}
+
+provide let greatestCommonDivisorAcc = (a, b) => {
+    let rec gcdHelp = (x, y) => {
+        if (y == 0) {
+            return x
+        } else {
+            return gcdHelp(y, x % y)
+        }
+    }
+    gcdHelp(a, b)
+}
+
+provide let leastCommonMultipleAcc = (a, b) => {
+    return a * b / greatestCommonDivisorAcc(a, b)
+}
+
+provide let sumFirstNIte = (n) => {
+    let mut result = 0
+    for (let mut i = 1; i <= n;) {
+        result += i
+        i += 1
+    }
+    return result
+}
+
+provide let factorialIte = (n) => {
+    let mut result = 1
+    for (let mut i = 1; i <= n;) {
+        result *= i
+        i += 1
+    }
+    return result
+}
+
+provide let fibonacciIte = (n) => {
+    if (n <= 0) {
+        return 0
+    }
+    let mut acc1 = 0
+    let mut acc2 = 1
+    for (let mut i = 2; i <= n;) {
+        let temp = acc2
+        acc2 += acc1
+        acc1 = temp
+        i += 1
+    }
+    return acc2
+}
+
+provide let greatestCommonDivisorIte = (a, b) => {
+    let mut aCopy = a
+    let mut bCopy = b
+    while (bCopy != 0) {
+        let temp = bCopy
+        bCopy = aCopy % bCopy
+        aCopy = temp
+    }
+    return aCopy
+}
+
+provide let leastCommonDivisorIte = (a, b) => {
+    return (a * b) / greatestCommonDivisorIte(a, b)
+}
