@@ -1,0 +1,48 @@
+module NumbersIterativeTest
+
+from "../src/numbers.gr" include Numbers
+from "./testing.gr" include Testing
+
+use Numbers.*
+use Testing.*
+
+let testSuite = [
+  {
+    name: "sumFirstNIte",
+    cases: [
+      { result: sumFirstNIte(0), expected: 0 },
+      { result: sumFirstNIte(3), expected: 6 },
+    ]
+  },
+  {
+    name: "factorialIte",
+    cases: [
+      { result: factorialIte(0), expected: 1 },
+      { result: factorialIte(4), expected: 24 },
+    ]
+  },
+  {
+    name: "fibonacciIte",
+    cases: [
+      { result: fibonacciIte(0), expected: 0 },
+      { result: fibonacciIte(1), expected: 1 },
+      { result: fibonacciIte(6), expected: 8 },
+    ]
+  },
+  {
+    name: "greatestCommonDivisorIte",
+    cases: [
+      { result: greatestCommonDivisorIte(12, 8), expected: 4 },
+      { result: greatestCommonDivisorIte(7, 5), expected: 1 },
+    ]
+  },
+  {
+    name: "leastCommonDivisorIte",
+    cases: [
+      { result: leastCommonDivisorIte(4, 6), expected: 12 },
+      { result: leastCommonDivisorIte(6, 8), expected: 24 },
+    ]
+  }
+]
+
+runTests(testSuite)

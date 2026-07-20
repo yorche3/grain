@@ -1,0 +1,19 @@
+module CalculatorTest
+
+from "../src/calculator.gr" include Calculator
+from "./test.gr" include Test
+use Calculator.*
+use Test.*
+
+Test.addTest("addition(2, 3) = 5", addition(2, 3), 5)
+
+Test.addTest("subtraction(5, 2) = 3", subtraction(5, 2), 3)
+
+Test.addTest("multiplication(3, 4) = 12", multiplication(3, 4), 12)
+
+Test.addTest("division(10, 3) = 3", division(10, 3), 3)
+
+Test.addTest("modulus(10, 3) = 1", modulus(10, 3), 1)
+
+Test.runTests()
+
