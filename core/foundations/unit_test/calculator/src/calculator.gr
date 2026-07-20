@@ -1,0 +1,29 @@
+module Calculator
+
+provide let addition = (a, b) => a + b
+
+provide let subtraction = (a, b) => a - b
+
+provide let multiplication = (a, b) => {
+    let mut result = 0
+    for (let mut i = 0; i < b;) {
+        result = addition(result, a)
+        i = addition(i, 1)
+    }
+    result       
+}
+
+provide let division = (a, b) => {
+    let mut quotient = 0
+    let mut aCopy = a
+    while (aCopy >= b) {
+        aCopy = subtraction(aCopy, b)
+        quotient = addition(quotient, 1)
+    }
+    quotient
+}
+
+provide let modulus = (a, b) => {
+    let quotient = division(a, b)
+    subtraction(a, multiplication(b, quotient))
+}

@@ -1,0 +1,9 @@
+module RunTests
+
+from "./numbers_rec_test.gr" include NumbersRecursiveTest
+from "./numbers_acc_test.gr" include NumbersAccumulatorTest
+from "./numbers_ite_test.gr" include NumbersIterativeTest
+from "./testing.gr" include Testing
+
+Testing.printSummary()
+

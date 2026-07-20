@@ -1,0 +1,48 @@
+module NumbersAccumulatorTest
+
+from "../src/numbers.gr" include Numbers
+from "./testing.gr" include Testing
+
+use Numbers.*
+use Testing.*
+
+let testSuite = [
+  {
+    name: "sumFirstNAcc",
+    cases: [
+      { result: sumFirstNAcc(0), expected: 0 },
+      { result: sumFirstNAcc(3), expected: 6 },
+    ]
+  },
+  {
+    name: "factorialAcc",
+    cases: [
+      { result: factorialAcc(0), expected: 1 },
+      { result: factorialAcc(4), expected: 24 },
+    ]
+  },
+  {
+    name: "fibonacciAcc",
+    cases: [
+      { result: fibonacciAcc(0), expected: 0 },
+      { result: fibonacciAcc(1), expected: 1 },
+      { result: fibonacciAcc(6), expected: 8 },
+    ]
+  },
+  {
+    name: "greatestCommonDivisorAcc",
+    cases: [
+      { result: greatestCommonDivisorAcc(12, 8), expected: 4 },
+      { result: greatestCommonDivisorAcc(7, 5), expected: 1 },
+    ]
+  },
+  {
+    name: "leastCommonMultipleAcc",
+    cases: [
+      { result: leastCommonMultipleAcc(4, 6), expected: 12 },
+      { result: leastCommonMultipleAcc(6, 8), expected: 24 },
+    ]
+  }
+]
+
+runTests(testSuite)
