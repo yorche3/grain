@@ -10,6 +10,9 @@ Implementaciones de los módulos **Core** del roadmap en **Grain**.
 |--------|-------------|
 | [`foundations/`](foundations/) | **Fase 0 — Fundamentos**: `hello_world`, `calculator`, `numbers` |
 
+> **ES:** `hello_user` no se implementa: Grain no ofrece, a la fecha, lectura de entrada interactiva (`stdin`) en su biblioteca estándar.
+> **EN:** `hello_user` is not implemented: Grain does not currently provide interactive input reading (`stdin`) in its standard library.
+
 ---
 
 ## ▶️ Siguiente / Next

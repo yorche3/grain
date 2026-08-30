@@ -10,6 +10,10 @@ Proyectos en **Grain**, un lenguaje funcional que compila a WebAssembly.
 |--------|-------------|
 | [`core/foundations/`](core/foundations/) | **Fase 0 — Fundamentos**: `hello_world`, `calculator`, `numbers` |
 
+> **ES:** `hello_user` (02_Hello_User) **no se implementa** en Grain: el lenguaje no ofrece, a la fecha, una forma de leer entrada interactiva desde la consola (`stdin`) en la biblioteca estándar. El resto de los módulos de fundamentos, que no requieren entrada del usuario, sí se implementan con normalidad.
+>
+> **EN:** `hello_user` (02_Hello_User) **is not implemented** in Grain: the language does not currently provide a way to read interactive console input (`stdin`) in its standard library. The remaining foundations modules, which don't require user input, are implemented normally.
+
 ---
 
 ## ▶️ Comenzar / Getting Started
