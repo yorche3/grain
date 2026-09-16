@@ -1,0 +1,61 @@
+module NaiveSortTest
+
+from "../src/naive_sort.gr" include NaiveSort
+from "./testing.gr" include Testing
+from "list" include List
+
+use NaiveSort.*
+use Testing.*
+
+// Casos de prueba de la especificación 05_Naive_Sort.md
+let standardInput = [5, 2, 9, 1, 5, 6]
+let standardOutput = [1, 2, 5, 5, 6, 9]
+
+let sortedInput = [1, 2, 3, 4, 5]
+let sortedOutput = [1, 2, 3, 4, 5]
+
+let reverseInput = [5, 4, 3, 2, 1]
+let reverseOutput = [1, 2, 3, 4, 5]
+
+let identicalInput = [7, 7, 7, 7]
+let identicalOutput = [7, 7, 7, 7]
+
+let negativeInput = [3, -1, 4, -5, 0]
+let negativeOutput = [-5, -1, 0, 3, 4]
+
+let singleInput = [42]
+let singleOutput = [42]
+
+let emptyInput = []
+let emptyOutput = []
+
+record SortCase {
+  description: String,
+  input: List<Number>,
+  expected: List<Number>,
+}
+
+let cases = [
+  { description: "an unsorted array", input: standardInput, expected: standardOutput },
+  { description: "an already sorted array", input: sortedInput, expected: sortedOutput },
+  { description: "a reverse ordered array", input: reverseInput, expected: reverseOutput },
+  { description: "an array of identical elements", input: identicalInput, expected: identicalOutput },
+  { description: "an array with negative numbers", input: negativeInput, expected: negativeOutput },
+  { description: "a single element array", input: singleInput, expected: singleOutput },
+  { description: "an empty array", input: emptyInput, expected: emptyOutput },
+]
+
+// Helper compartido: recibe la función a probar y el nombre del algoritmo, y
+// ejecuta los 7 casos de la especificación con un mensaje descriptivo cada uno.
+// Caso nulo omitido: Grain no admite `null`/`nil` ni listas inválidas, así que
+// el indicador de fallo del contrato no es representable en el tipo List.
+let assertSortsAllCases = (sort, algorithm) => {
+  runTests(List.map((testCase) => {
+    name: algorithm ++ " should sort " ++ testCase.description,
+    cases: [{ result: sort(testCase.input), expected: testCase.expected }],
+  }, cases))
+}
+
+assertSortsAllCases(selectionSort, "selection_sort")
+assertSortsAllCases(bubbleSort, "bubble_sort")
+assertSortsAllCases(insertionSort, "insertion_sort")

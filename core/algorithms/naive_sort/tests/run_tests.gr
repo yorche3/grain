@@ -1,0 +1,6 @@
+module RunTests
+
+from "./naive_sort_test.gr" include NaiveSortTest
+from "./testing.gr" include Testing
+
+Testing.printSummary()

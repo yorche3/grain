@@ -1,0 +1,67 @@
+// naive_sort.gr — Módulo Naive Sort con ordenamientos elementales
+//
+// Especificación: 05_Naive_Sort
+//
+// Funciones del contrato (List<Number> -> List<Number>), de menor a mayor:
+//   selectionSort  — encuentra el mínimo del tramo no ordenado y lo ubica al inicio
+//   bubbleSort     — compara e intercambia adyacentes, con bandera `swapped`
+//   insertionSort  — inserta cada elemento en su sub-lista ordenada
+//
+// Caso nulo: Grain no admite `null`/`nil` ni una lista inválida, así que el
+// indicador de fallo del lenguaje no es representable (igual que en F# y Gleam).
+module NaiveSort
+
+provide let rec selectionSort = (arr: List<Number>) => {
+    let rec pickMin = (candidates, minValue) => {
+        match (candidates) {
+            [] => minValue,
+            [x, ...xs] => if (x < minValue) { pickMin(xs, x) } else { pickMin(xs, minValue) },
+        }
+    }
+    let rec removeFirst = (list, target) => {
+        match (list) {
+            [] => [],
+            [x, ...xs] => if (x == target) { xs } else { [x, ...removeFirst(xs, target)] },
+        }
+    }
+    match (arr) {
+        [] => [],
+        [x, ...xs] => {
+            let minValue = pickMin(xs, x)
+            [minValue, ...selectionSort(removeFirst(arr, minValue))]
+        },
+    }
+}
+provide let rec bubbleSort = (arr: List<Number>) => {
+    let rec bubblePass = (list) => {
+        match (list) {
+            [] => ([], false),
+            [x] => ([x], false),
+            [x, y, ...xs] => if (x > y) {
+                let (rest, _) = bubblePass([x, ...xs])
+                ([y, ...rest], true)
+            } else {
+                let (rest, swappedRest) = bubblePass([y, ...xs])
+                ([x, ...rest], swappedRest)
+            },
+        }
+    }
+    let (sorted, swapped) = bubblePass(arr)
+    if (swapped) { bubbleSort(sorted) } else { sorted }
+}
+provide let insertionSort = (arr: List<Number>) => {
+    let rec insert = (sorted, x) => {
+        match (sorted) {
+            [] => [x],
+            [y, ...ys] => if (x <= y) { [x, y, ...ys] } else { [y, ...insert(ys, x)] },
+        }
+    }
+    let rec loop = (sorted, remaining) => {
+        match (remaining) {
+            [] => sorted,
+            [x, ...xs] => loop(insert(sorted, x), xs),
+        }
+    }
+    loop([], arr)
+}
+// Fin del módulo NaiveSort
