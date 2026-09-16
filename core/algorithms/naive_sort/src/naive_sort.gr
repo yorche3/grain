@@ -11,62 +11,55 @@
 // indicador de fallo del lenguaje no es representable (igual que en F# y Gleam).
 module NaiveSort
 
-provide let rec selectionsort = (arr: List<Number>) {
-    let rec pickMin = (minValue, acc, remaining) {
-        match remaining {
-            [] => List.append(acc, [minValue])
-            | x::xs =>
-                if x < minValue {
-                    pickMin(x, List.append(acc, [minValue]), xs)
-                } else {
-                    pickMin(minValue, List.append(acc, [x]), xs)
-                }
+provide let rec selectionSort = (arr: List<Number>) => {
+    let rec pickMin = (candidates, minValue) => {
+        match (candidates) {
+            [] => minValue,
+            [x, ...xs] => if (x < minValue) { pickMin(xs, x) } else { pickMin(xs, minValue) },
         }
     }
-    match arr {
-        [] => []
-        | x::xs => pickMin(x, [], xs)
+    let rec removeFirst = (list, target) => {
+        match (list) {
+            [] => [],
+            [x, ...xs] => if (x == target) { xs } else { [x, ...removeFirst(xs, target)] },
+        }
+    }
+    match (arr) {
+        [] => [],
+        [x, ...xs] => {
+            let minValue = pickMin(xs, x)
+            [minValue, ...selectionSort(removeFirst(arr, minValue))]
+        },
     }
 }
-provide let rec bubblesort = (arr: List<Number>) {
-    let rec loop = (swapped, arr) {
-        if not swapped {
-            arr
-        } else {
-            let rec inner = (i, swapped, arr) {
-                if i >= List.length(arr) - 1 {
-                    loop(swapped, arr)
-                } else {
-                    if List.get(arr, i) > List.get(arr, i + 1) {
-                        let arr = List.set(arr, i, List.get(arr, i + 1))
-                        let arr = List.set(arr, i + 1, List.get(arr, i))
-                        inner(i + 1, true, arr)
-                    } else {
-                        inner(i + 1, swapped, arr)
-                    }
-                }
-            }
-            inner(0, false, arr)
+provide let rec bubbleSort = (arr: List<Number>) => {
+    let rec bubblePass = (list) => {
+        match (list) {
+            [] => ([], false),
+            [x] => ([x], false),
+            [x, y, ...xs] => if (x > y) {
+                let (rest, _) = bubblePass([x, ...xs])
+                ([y, ...rest], true)
+            } else {
+                let (rest, swappedRest) = bubblePass([y, ...xs])
+                ([x, ...rest], swappedRest)
+            },
         }
     }
-    loop(true, arr)
+    let (sorted, swapped) = bubblePass(arr)
+    if (swapped) { bubbleSort(sorted) } else { sorted }
 }
-provide let rec insertionsort = (arr: List<Number>) {
-    let rec insert = (sorted, x) {
-        match sorted {
-            [] => [x]
-            | y::ys =>
-                if x < y {
-                    List.append([x], List.append([y], ys))
-                } else {
-                    List.append([y], insert(ys, x))
-                }
+provide let insertionSort = (arr: List<Number>) => {
+    let rec insert = (sorted, x) => {
+        match (sorted) {
+            [] => [x],
+            [y, ...ys] => if (x <= y) { [x, y, ...ys] } else { [y, ...insert(ys, x)] },
         }
     }
-    let rec loop = (sorted, remaining) {
-        match remaining {
-            [] => sorted
-            | x::xs => loop(insert(sorted, x), xs)
+    let rec loop = (sorted, remaining) => {
+        match (remaining) {
+            [] => sorted,
+            [x, ...xs] => loop(insert(sorted, x), xs),
         }
     }
     loop([], arr)
