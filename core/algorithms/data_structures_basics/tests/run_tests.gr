@@ -1,3 +1,12 @@
 module RunTests
 
-print("0 tests")
+from "./data_structures_basics_test.gr" include DataStructuresBasicsTest
+from "./testing.gr" include Testing
+
+// Orden de la especificación: Node, LinkedList, Stack y Queue.
+Testing.runTests(DataStructuresBasicsTest.nodeTests)
+Testing.runTests(DataStructuresBasicsTest.linkedListTests)
+Testing.runTests(DataStructuresBasicsTest.stackTests)
+Testing.runTests(DataStructuresBasicsTest.queueTests)
+
+Testing.printSummary()

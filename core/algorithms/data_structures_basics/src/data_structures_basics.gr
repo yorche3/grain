@@ -80,23 +80,58 @@ provide let linkedListInit = () => {
 }
 
 /// Valor de la cabeza, o `-1` si la lista está vacía (`get_head`).
-provide let linkedListHead = (list: LinkedList) => -1
+provide let linkedListHead = (list: LinkedList) => 
+  match (list.head) {
+    Some(node) => nodeValue(node),
+    None => -1,
+  }
 
 /// Inserta el valor al principio de la lista (`insert_head`).
-provide let linkedListInsertHead = (list: LinkedList, value: Number) => list
+provide let linkedListInsertHead = (list: LinkedList, value: Number) => {
+  let newNode = nodeInit(value)
+  match (list.head) {
+    None => { head: Some(newNode), tail: Some(newNode), count: 1 },
+    Some(oldHead) => { head: Some(newNode), tail: list.tail, count: list.count + 1 },
+  }
+}
 
 /// Inserta el valor al final de la lista (`insert_tail`).
-provide let linkedListInsertTail = (list: LinkedList, value: Number) => list
+provide let linkedListInsertTail = (list: LinkedList, value: Number) => {
+  let newNode = nodeInit(value)
+  match (list.tail) {
+    None => { head: Some(newNode), tail: Some(newNode), count: 1 },
+    Some(oldTail) => { head: list.head, tail: Some(newNode), count: list.count + 1 },
+  }
+}
 
 /// Elimina la primera aparición: `(true, lista resultante)` si estaba, y
 /// `(false, la misma lista)` si el valor no está (`delete`).
-provide let linkedListDelete = (list: LinkedList, value: Number) => (false, list)
+provide let linkedListDelete = (list: LinkedList, value: Number) => {
+  let rec deleteNode = (node: Option<Node>, value: Number) => {
+    match (node) {
+      None => (false, None),
+      Some(n) =>
+        if (nodeValue(n) == value) {
+          (true, nodeNext(n))
+        } else {
+          let (removed, next) = deleteNode(nodeNext(n), value)
+          (removed, Some({ ...n, next }))
+        },
+    }
+  }
+  let (removed, newHead) = deleteNode(list.head, value)
+  if (removed) {
+    (true, { head: newHead, tail: list.tail, count: list.count - 1 })
+  } else {
+    (false, list)
+  }
+}
 
 /// Indica si la lista no tiene nodos (`is_empty`).
-provide let linkedListIsEmpty = (list: LinkedList) => false
+provide let linkedListIsEmpty = (list: LinkedList) => list.count == 0
 
 /// Número de nodos de la lista (`size`).
-provide let linkedListSize = (list: LinkedList) => 0
+provide let linkedListSize = (list: LinkedList) => list.count
 
 // ---------------------------------------------------------------------------
 // Stack — LIFO sobre el mismo Node
@@ -108,21 +143,36 @@ provide let stackInit = () => {
 }
 
 /// Apila el valor sobre el tope (`push`).
-provide let stackPush = (stack: Stack, value: Number) => stack
+provide let stackPush = (stack: Stack, value: Number) => {
+  let newNode = nodeInit(value)
+  match (stack.top) {
+    None => { top: Some(newNode), count: 1 },
+    Some(oldTop) => { top: Some(newNode), count: stack.count + 1 },
+  }
+}
 
 /// Extrae el tope: `(valor, pila)`; si la pila está vacía, `(-1, la misma pila)`
 /// (`pop`).
-provide let stackPop = (stack: Stack) => (-1, stack)
+provide let stackPop = (stack: Stack) => {
+  match (stack.top) {
+    None => (-1, stack),
+    Some(n) => (nodeValue(n), { top: nodeNext(n), count: stack.count - 1 }),
+  }
+}
 
 /// Observa el tope sin extraerlo: el valor, o `-1` si la pila está vacía
 /// (`peek`).
-provide let stackPeek = (stack: Stack) => -1
+provide let stackPeek = (stack: Stack) =>
+  match (stack.top) {
+    None => -1,
+    Some(n) => nodeValue(n),
+  }
 
 /// Indica si la pila no tiene nodos (`is_empty`).
-provide let stackIsEmpty = (stack: Stack) => false
+provide let stackIsEmpty = (stack: Stack) => stack.count == 0
 
 /// Número de nodos de la pila (`size`).
-provide let stackSize = (stack: Stack) => 0
+provide let stackSize = (stack: Stack) => stack.count
 
 // ---------------------------------------------------------------------------
 // Queue — FIFO sobre el mismo Node
@@ -134,18 +184,40 @@ provide let queueInit = () => {
 }
 
 /// Encola el valor por el final (`enqueue`).
-provide let queueEnqueue = (queue: Queue, value: Number) => queue
+provide let queueEnqueue = (queue: Queue, value: Number) => {
+  let newNode = nodeInit(value)
+  match (queue.rear) {
+    None => { front: Some(newNode), rear: Some(newNode), count: 1 },
+    Some(oldRear) => {
+      nodeSetNext(oldRear, Some(newNode))
+      { front: queue.front, rear: Some(newNode), count: queue.count + 1 }
+    },
+  }
+}
 
 /// Extrae el frente: `(valor, cola)`; si la cola está vacía, `(-1, la misma
 /// cola)` (`dequeue`).
-provide let queueDequeue = (queue: Queue) => (-1, queue)
+provide let queueDequeue = (queue: Queue) => {
+  match (queue.front) {
+    None => (-1, queue),
+    Some(n) => {
+      let newFront = nodeNext(n)
+      let newRear = if (newFront == None) { None } else { queue.rear }
+      (nodeValue(n), { front: newFront, rear: newRear, count: queue.count - 1 })
+    },
+  }
+}
 
 /// Observa el frente sin extraerlo: el valor, o `-1` si la cola está vacía
 /// (`peek`).
-provide let queuePeek = (queue: Queue) => -1
+provide let queuePeek = (queue: Queue) =>
+  match (queue.front) {
+    None => -1,
+    Some(n) => nodeValue(n),
+  }
 
 /// Indica si la cola no tiene nodos (`is_empty`).
-provide let queueIsEmpty = (queue: Queue) => false
+provide let queueIsEmpty = (queue: Queue) => queue.count == 0
 
 /// Número de nodos de la cola (`size`).
-provide let queueSize = (queue: Queue) => 0
+provide let queueSize = (queue: Queue) => queue.count

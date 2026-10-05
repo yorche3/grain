@@ -1,0 +1,112 @@
+module Testing
+
+from "list" include List
+
+// ---------------------------------------------------------------------------
+// Casos y grupos
+// ---------------------------------------------------------------------------
+
+/// Resultado de un caso: número o bandera. Evita mezclar tipos en un grupo,
+/// que es lo que obligaba a separar los tests en listas por tipo.
+provide enum CaseOutcome {
+  NumberCase(Number),
+  BoolCase(Bool),
+}
+
+/// Un caso: descripción, cálculo del valor obtenido y valor esperado.
+/// `run` es un thunk, así que el caso se evalúa cuando se ejecuta, no al
+/// declararlo: el framework los recorre uno por uno y en orden.
+provide record TestCase {
+  description: String,
+  run: () => CaseOutcome,
+  expected: CaseOutcome,
+}
+
+/// Un grupo: un caso de la especificación con sus aserciones, en orden.
+provide record TestGroup {
+  name: String,
+  cases: List<TestCase>,
+}
+
+/// Caso numérico (`get_head`, `peek`, `size`…).
+provide let checkNumber = (
+  description: String,
+  run: () => Number,
+  expected: Number,
+) => {
+  { description, run: () => NumberCase(run()), expected: NumberCase(expected) }
+}
+
+/// Caso booleano (`is_empty`, `delete`…).
+provide let checkBool = (description: String, run: () => Bool, expected: Bool) => {
+  { description, run: () => BoolCase(run()), expected: BoolCase(expected) }
+}
+
+// ---------------------------------------------------------------------------
+// Ejecución
+// ---------------------------------------------------------------------------
+
+let mut globalPassed = 0
+let mut globalFailed = 0
+let mut globalTotal = 0
+
+let outcomeToString = (outcome) => {
+  match (outcome) {
+    NumberCase(number) => toString(number),
+    BoolCase(flag) => toString(flag),
+  }
+}
+
+/// Ejecuta un grupo caso por caso, en orden, y acumula su resumen.
+provide let runGroup = (group: TestGroup) => {
+  let mut groupPassed = 0
+  let mut groupFailed = 0
+  print("\n▸ " ++ group.name)
+  List.forEach((testCase: TestCase) => {
+    globalTotal += 1
+    let actual = testCase.run()
+    if (actual == testCase.expected) {
+      groupPassed += 1
+      globalPassed += 1
+      print("  ✓ " ++ testCase.description)
+    } else {
+      groupFailed += 1
+      globalFailed += 1
+      print(
+        "  ✗ " ++
+        testCase.description ++
+        " — expected " ++
+        outcomeToString(testCase.expected) ++
+        ", got " ++
+        outcomeToString(actual),
+      )
+    }
+  }, group.cases)
+  print(
+    "  → " ++
+    toString(groupPassed) ++
+    " passed, " ++
+    toString(groupFailed) ++
+    " failed",
+  )
+}
+
+/// Ejecuta los grupos en orden.
+provide let runTests = (suite: List<TestGroup>) => {
+  List.forEach((group: TestGroup) => runGroup(group), suite)
+}
+
+/// Resumen general; devuelve `true` cuando no falló ningún caso.
+provide let printSummary = () => {
+  print("\n--- Test Summary ---")
+  print(
+    "Cases: " ++
+    toString(globalPassed) ++
+    " passed, " ++
+    toString(globalFailed) ++
+    " failed, " ++
+    toString(globalTotal) ++
+    " total",
+  )
+  globalFailed == 0
+}

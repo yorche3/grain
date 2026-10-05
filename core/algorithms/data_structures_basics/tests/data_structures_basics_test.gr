@@ -1,0 +1,301 @@
+module DataStructuresBasicsTest
+
+from "../src/data_structures_basics.gr" include DataStructuresBasics
+from "./testing.gr" include Testing
+from "list" include List
+
+use DataStructuresBasics.*
+use Testing.*
+
+// Los grupos siguen los casos de la especificación en orden: Node, LinkedList,
+// Stack y Queue, cada uno con sus pasos sucesivos sobre la misma instancia.
+// Cada caso es un thunk, así que se evalúa al ejecutarse, uno por uno.
+
+// ---------------------------------------------------------------------------
+// Helpers de Option<Node>
+// ---------------------------------------------------------------------------
+
+// Valor del enlace, o -1 cuando el enlace está ausente.
+let nextValue = (link) => {
+  match (link) {
+    Some(node) => nodeValue(node),
+    None => -1,
+  }
+}
+
+// true cuando el enlace está ausente.
+let nextIsNone = (link) => {
+  match (link) {
+    Some(_) => false,
+    None => true,
+  }
+}
+
+// ===========================================================================
+// Node — 2 casos de la especificación
+// ===========================================================================
+
+// Caso 1: inicializar y observar valor/enlace.
+let nodeA = nodeInit(10)
+
+// Caso 2: inicializar otro nodo, enlazar y recorrer.
+let nodeB = nodeInit(20)
+let nodeALinked = nodeWithNext(nodeA, nodeB)
+
+provide let nodeTests = [
+  {
+    name: "Node — caso 1: inicializar y observar valor/enlace",
+    cases: [
+      checkNumber("get_value(a) = 10", () => nodeValue(nodeA), 10),
+      checkBool(
+        "el enlace de a sigue ausente",
+        () => nextIsNone(nodeNext(nodeA)),
+        true,
+      ),
+    ],
+  },
+  {
+    name: "Node — caso 2: inicializar otro nodo, enlazar y recorrer",
+    cases: [
+      checkNumber(
+        "get_value(get_next(a)) = 20",
+        () => nextValue(nodeNext(nodeALinked)),
+        20,
+      ),
+      checkBool(
+        "el enlace de b sigue ausente",
+        () => nextIsNone(nodeNext(nodeB)),
+        true,
+      ),
+    ],
+  },
+]
+
+// ===========================================================================
+// LinkedList — 5 pasos sobre la misma instancia
+// ===========================================================================
+
+// Paso 1: estado vacío.
+let listEmpty = linkedListInit()
+
+// Paso 2: insertar por ambos extremos.
+let listAfterTail10 = linkedListInsertTail(listEmpty, 10)
+let listAfterTail20 = linkedListInsertTail(listAfterTail10, 20)
+let listAfterHead5 = linkedListInsertHead(listAfterTail20, 5)
+let listInserted = linkedListInsertTail(listAfterHead5, 10)
+
+// Paso 3: eliminar la primera aparición.
+let (removedFirst, listAfterFirstDelete) = linkedListDelete(listInserted, 10)
+
+// Paso 4: valor ausente.
+let (removedAbsent, listAfterAbsentDelete) =
+  linkedListDelete(listAfterFirstDelete, 99)
+
+// Paso 5: vaciar la lista.
+let (removedHead, listAfterHeadDelete) =
+  linkedListDelete(listAfterAbsentDelete, 5)
+let (removedMiddle, listAfterMiddleDelete) =
+  linkedListDelete(listAfterHeadDelete, 20)
+let (removedLast, listEmptied) = linkedListDelete(listAfterMiddleDelete, 10)
+
+provide let linkedListTests = [
+  {
+    name: "LinkedList — paso 1: estado vacío",
+    cases: [
+      checkBool("is_empty = true", () => linkedListIsEmpty(listEmpty), true),
+      checkNumber("size = 0", () => linkedListSize(listEmpty), 0),
+      checkNumber("get_head = -1", () => linkedListHead(listEmpty), -1),
+    ],
+  },
+  {
+    name: "LinkedList — paso 2: insertar por ambos extremos",
+    cases: [
+      checkNumber("size = 4", () => linkedListSize(listInserted), 4),
+      checkNumber("get_head = 5", () => linkedListHead(listInserted), 5),
+    ],
+  },
+  {
+    name: "LinkedList — paso 3: eliminar la primera aparición",
+    cases: [
+      checkBool("delete(10) = true", () => removedFirst, true),
+      checkNumber(
+        "get_head = 5",
+        () => linkedListHead(listAfterFirstDelete),
+        5,
+      ),
+      checkNumber("size = 3", () => linkedListSize(listAfterFirstDelete), 3),
+    ],
+  },
+  {
+    name: "LinkedList — paso 4: valor ausente",
+    cases: [
+      checkBool("delete(99) = false", () => removedAbsent, false),
+      checkNumber(
+        "get_head no cambia = 5",
+        () => linkedListHead(listAfterAbsentDelete),
+        5,
+      ),
+      checkNumber(
+        "size no cambia = 3",
+        () => linkedListSize(listAfterAbsentDelete),
+        3,
+      ),
+    ],
+  },
+  {
+    name: "LinkedList — paso 5: vaciar la lista",
+    cases: [
+      checkBool("delete(5) = true", () => removedHead, true),
+      checkBool("delete(20) = true", () => removedMiddle, true),
+      checkBool("delete(10) = true", () => removedLast, true),
+      checkBool("is_empty = true", () => linkedListIsEmpty(listEmptied), true),
+      checkNumber("size = 0", () => linkedListSize(listEmptied), 0),
+      checkNumber("get_head = -1", () => linkedListHead(listEmptied), -1),
+    ],
+  },
+]
+
+// ===========================================================================
+// Stack — 4 pasos sobre la misma instancia
+// ===========================================================================
+
+// Paso 1: estado vacío y extracción fallida.
+let stackEmpty = stackInit()
+let (emptyPop, stackAfterEmptyPop) = stackPop(stackEmpty)
+
+// Paso 2: LIFO y peek no mutante.
+let stackAfter10 = stackPush(stackEmpty, 10)
+let stackAfter20 = stackPush(stackAfter10, 20)
+let stackAfter30 = stackPush(stackAfter20, 30)
+
+// Paso 3: extracción y reutilización.
+let (firstPop, stackAfterFirstPop) = stackPop(stackAfter30)
+let stackReused = stackPush(stackAfterFirstPop, 40)
+let (secondPop, stackAfterSecondPop) = stackPop(stackReused)
+let (thirdPop, stackAfterThirdPop) = stackPop(stackAfterSecondPop)
+let (fourthPop, stackEmptied) = stackPop(stackAfterThirdPop)
+
+// Paso 4: vacío tras extracción.
+let (finalPop, stackAfterFinalPop) = stackPop(stackEmptied)
+
+provide let stackTests = [
+  {
+    name: "Stack — paso 1: estado vacío y extracción fallida",
+    cases: [
+      checkBool("is_empty = true", () => stackIsEmpty(stackEmpty), true),
+      checkNumber("size = 0", () => stackSize(stackEmpty), 0),
+      checkNumber("peek = -1", () => stackPeek(stackEmpty), -1),
+      checkNumber("pop = -1", () => emptyPop, -1),
+      checkBool(
+        "la pila sigue vacía tras el pop fallido",
+        () => stackIsEmpty(stackAfterEmptyPop),
+        true,
+      ),
+    ],
+  },
+  {
+    name: "Stack — paso 2: LIFO y peek no mutante",
+    cases: [
+      checkNumber("peek = 30", () => stackPeek(stackAfter30), 30),
+      checkNumber("size = 3", () => stackSize(stackAfter30), 3),
+    ],
+  },
+  {
+    name: "Stack — paso 3: extracción y reutilización",
+    cases: [
+      checkNumber("pop = 30", () => firstPop, 30),
+      checkNumber("pop = 40", () => secondPop, 40),
+      checkNumber("pop = 20", () => thirdPop, 20),
+      checkNumber("pop = 10", () => fourthPop, 10),
+      checkBool("is_empty = true", () => stackIsEmpty(stackEmptied), true),
+      checkNumber("size = 0", () => stackSize(stackEmptied), 0),
+    ],
+  },
+  {
+    name: "Stack — paso 4: vacío tras extracción",
+    cases: [
+      checkNumber("pop = -1", () => finalPop, -1),
+      checkBool(
+        "is_empty sigue true",
+        () => stackIsEmpty(stackAfterFinalPop),
+        true,
+      ),
+    ],
+  },
+]
+
+// ===========================================================================
+// Queue — 4 pasos sobre la misma instancia
+// ===========================================================================
+
+// Paso 1: estado vacío y extracción fallida.
+let queueEmpty = queueInit()
+let (emptyDequeue, queueAfterEmptyDequeue) = queueDequeue(queueEmpty)
+
+// Paso 2: FIFO y peek no mutante.
+let queueAfter10 = queueEnqueue(queueEmpty, 10)
+let queueAfter20 = queueEnqueue(queueAfter10, 20)
+let queueAfter30 = queueEnqueue(queueAfter20, 30)
+
+// Paso 3: extracción y reutilización.
+let (firstDequeue, queueAfterFirstDequeue) = queueDequeue(queueAfter30)
+let queueReused = queueEnqueue(queueAfterFirstDequeue, 40)
+let (secondDequeue, queueAfterSecondDequeue) = queueDequeue(queueReused)
+let (thirdDequeue, queueAfterThirdDequeue) = queueDequeue(queueAfterSecondDequeue)
+let (fourthDequeue, queueEmptied) = queueDequeue(queueAfterThirdDequeue)
+
+// Paso 4: vacío tras extracción.
+let (finalDequeue, queueAfterFinalDequeue) = queueDequeue(queueEmptied)
+
+provide let queueTests = [
+  {
+    name: "Queue — paso 1: estado vacío y extracción fallida",
+    cases: [
+      checkBool("is_empty = true", () => queueIsEmpty(queueEmpty), true),
+      checkNumber("size = 0", () => queueSize(queueEmpty), 0),
+      checkNumber("peek = -1", () => queuePeek(queueEmpty), -1),
+      checkNumber("dequeue = -1", () => emptyDequeue, -1),
+      checkBool(
+        "la cola sigue vacía tras el dequeue fallido",
+        () => queueIsEmpty(queueAfterEmptyDequeue),
+        true,
+      ),
+    ],
+  },
+  {
+    name: "Queue — paso 2: FIFO y peek no mutante",
+    cases: [
+      checkNumber("peek = 10", () => queuePeek(queueAfter30), 10),
+      checkNumber("size = 3", () => queueSize(queueAfter30), 3),
+    ],
+  },
+  {
+    name: "Queue — paso 3: extracción y reutilización",
+    cases: [
+      checkNumber("dequeue = 10", () => firstDequeue, 10),
+      checkNumber("dequeue = 20", () => secondDequeue, 20),
+      checkNumber("dequeue = 30", () => thirdDequeue, 30),
+      checkNumber("dequeue = 40", () => fourthDequeue, 40),
+      checkBool("is_empty = true", () => queueIsEmpty(queueEmptied), true),
+      checkNumber("size = 0", () => queueSize(queueEmptied), 0),
+    ],
+  },
+  {
+    name: "Queue — paso 4: vacío tras extracción",
+    cases: [
+      checkNumber("dequeue = -1", () => finalDequeue, -1),
+      checkBool(
+        "is_empty sigue true",
+        () => queueIsEmpty(queueAfterFinalDequeue),
+        true,
+      ),
+    ],
+  },
+]
+
+// ===========================================================================
+// La suite la ejecuta tests/run_tests.gr, en el orden de la especificación.
+// ===========================================================================
+
+// (Los grupos de este módulo se ejecutan desde tests/run_tests.gr:
+// `runTests` grupo a grupo y, al final, `printSummary`.)
