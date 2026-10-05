@@ -11,6 +11,7 @@ Los módulos de esta fase trabajan sobre listas **inmutables** (`List<Number>`):
 | Módulo | Especificación | Enfoque | Tests | Estado |
 |--------|---------------|---------|:-----:|:------:|
 | [`naive_sort/`](naive_sort/) | [05_Naive_Sort](https://yorche3.github.io/programming_languages/core/algorithms/05_Naive_Sort/) | `make test` + `testing.gr` propio | 21 | ✅ |
+| [`data_structures_basics/`](data_structures_basics/) | [06_Data_Structures_Basics](https://yorche3.github.io/programming_languages/core/algorithms/06_Data_Structures_Basics/) | `make test` + `testing.gr` propio | 51 | ✅ |
 
 ---
 
@@ -18,14 +19,25 @@ Los módulos de esta fase trabajan sobre listas **inmutables** (`List<Number>`):
 
 ```text
 algorithms/
-└── naive_sort/                  # 05_Naive_Sort
+├── naive_sort/                  # 05_Naive_Sort
+│   ├── Makefile
+│   ├── .gitignore
+│   ├── src/
+│   │   └── naive_sort.gr        # selectionSort, bubbleSort, insertionSort
+│   ├── tests/
+│   │   ├── testing.gr           # Mini framework (reutilizado de numbers/)
+│   │   ├── naive_sort_test.gr   # 3 algoritmos × 7 casos = 21 aserciones
+│   │   └── run_tests.gr         # Entry point
+│   └── README.md
+│
+└── data_structures_basics/      # 06_Data_Structures_Basics
     ├── Makefile
     ├── .gitignore
     ├── src/
-    │   └── naive_sort.gr        # selectionSort, bubbleSort, insertionSort
+    │   └── data_structures_basics.gr  # Node, LinkedList, Stack, Queue
     ├── tests/
-    │   ├── testing.gr           # Mini framework (reutilizado de numbers/)
-    │   ├── naive_sort_test.gr   # 3 algoritmos × 7 casos = 21 aserciones
+    │   ├── testing.gr           # Mini framework
+    │   ├── data_structures_basics_test.gr  # 15 casos = 51 aserciones
     │   └── run_tests.gr         # Entry point
     └── README.md
 ```
