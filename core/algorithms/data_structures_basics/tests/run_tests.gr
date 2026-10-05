@@ -1,0 +1,3 @@
+module RunTests
+
+print("0 tests")
