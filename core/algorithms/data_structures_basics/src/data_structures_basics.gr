@@ -1,0 +1,151 @@
+// data_structures_basics.gr — Celda enlazada compartida, lista enlazada, pila y cola
+//
+// Especificación: 06_Data_Structures_Basics
+//
+// Contrato del paso 4b: declara los tipos nuevos y las firmas, y deja el cuerpo
+// de cada operación en su indicador natural, sin resolver ningún caso. El
+// algoritmo es del paso 5 y la suite, del 4c.
+//
+// Indicadores:
+//   - la ausencia de enlace es `None`, que solo aparece en los punteros a `Node`
+//     (`Node.next`, `head`, `tail`, `top`, `front` y `rear`); ninguna operación
+//     pública devuelve `Option` ni `Result`;
+//   - las operaciones que extraen un número devuelven `Number` y su fallo es `-1`;
+//   - las banderas devuelven `Bool` y su fallo es `false`;
+//   - los contadores devuelven `Number` y parten de `0`;
+//   - `linkedListDelete`, `stackPop` y `queueDequeue` devuelven una tupla
+//     `(valor o éxito, estructura)`: en el fallo, el indicador y la misma
+//     estructura, nunca una excepción.
+//
+// Grain es inmutable: cada operación devuelve un valor nuevo.
+module DataStructuresBasics
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+
+/// Celda enlazada compartida por LinkedList, Stack y Queue.
+abstract record rec Node {
+  value: Number,
+  next: Option<Node>,
+}
+
+/// Lista enlazada construida a mano sobre Node.
+abstract record LinkedList {
+  head: Option<Node>,
+  tail: Option<Node>,
+  count: Number,
+}
+
+/// Pila LIFO construida a mano sobre Node.
+abstract record Stack {
+  top: Option<Node>,
+  count: Number,
+}
+
+/// Cola FIFO construida a mano sobre Node.
+abstract record Queue {
+  front: Option<Node>,
+  rear: Option<Node>,
+  count: Number,
+}
+
+// ---------------------------------------------------------------------------
+// Node — celda enlazada compartida por las tres estructuras
+// ---------------------------------------------------------------------------
+
+/// Crea la celda con su valor y el enlace ausente (`init`).
+provide let nodeInit = (value: Number) => {
+  { value, next: None }
+}
+
+/// Valor de la celda (`get_value`).
+provide let nodeValue = (node: Node) => node.value
+
+/// Enlace de la celda; `None` cuando está ausente (`get_next`).
+provide let nodeNext = (node: Node) => node.next
+
+/// Devuelve una celda nueva enlazada con `next` (`set_next`).
+provide let nodeWithNext = (node: Node, next: Node) => {
+  { ...node, next: Some(next) }
+}
+
+// ---------------------------------------------------------------------------
+// LinkedList
+// ---------------------------------------------------------------------------
+
+/// Lista vacía: sin cabeza, sin cola y contador a cero (`init`).
+provide let linkedListInit = () => {
+  { head: None, tail: None, count: 0 }
+}
+
+/// Valor de la cabeza, o `-1` si la lista está vacía (`get_head`).
+provide let linkedListHead = (list: LinkedList) => -1
+
+/// Inserta el valor al principio de la lista (`insert_head`).
+provide let linkedListInsertHead = (list: LinkedList, value: Number) => list
+
+/// Inserta el valor al final de la lista (`insert_tail`).
+provide let linkedListInsertTail = (list: LinkedList, value: Number) => list
+
+/// Elimina la primera aparición: `(true, lista resultante)` si estaba, y
+/// `(false, la misma lista)` si el valor no está (`delete`).
+provide let linkedListDelete = (list: LinkedList, value: Number) => (false, list)
+
+/// Indica si la lista no tiene nodos (`is_empty`).
+provide let linkedListIsEmpty = (list: LinkedList) => false
+
+/// Número de nodos de la lista (`size`).
+provide let linkedListSize = (list: LinkedList) => 0
+
+// ---------------------------------------------------------------------------
+// Stack — LIFO sobre el mismo Node
+// ---------------------------------------------------------------------------
+
+/// Pila vacía: sin tope y contador a cero (`init`).
+provide let stackInit = () => {
+  { top: None, count: 0 }
+}
+
+/// Apila el valor sobre el tope (`push`).
+provide let stackPush = (stack: Stack, value: Number) => stack
+
+/// Extrae el tope: `(valor, pila)`; si la pila está vacía, `(-1, la misma pila)`
+/// (`pop`).
+provide let stackPop = (stack: Stack) => (-1, stack)
+
+/// Observa el tope sin extraerlo: el valor, o `-1` si la pila está vacía
+/// (`peek`).
+provide let stackPeek = (stack: Stack) => -1
+
+/// Indica si la pila no tiene nodos (`is_empty`).
+provide let stackIsEmpty = (stack: Stack) => false
+
+/// Número de nodos de la pila (`size`).
+provide let stackSize = (stack: Stack) => 0
+
+// ---------------------------------------------------------------------------
+// Queue — FIFO sobre el mismo Node
+// ---------------------------------------------------------------------------
+
+/// Cola vacía: sin frente, sin cola y contador a cero (`init`).
+provide let queueInit = () => {
+  { front: None, rear: None, count: 0 }
+}
+
+/// Encola el valor por el final (`enqueue`).
+provide let queueEnqueue = (queue: Queue, value: Number) => queue
+
+/// Extrae el frente: `(valor, cola)`; si la cola está vacía, `(-1, la misma
+/// cola)` (`dequeue`).
+provide let queueDequeue = (queue: Queue) => (-1, queue)
+
+/// Observa el frente sin extraerlo: el valor, o `-1` si la cola está vacía
+/// (`peek`).
+provide let queuePeek = (queue: Queue) => -1
+
+/// Indica si la cola no tiene nodos (`is_empty`).
+provide let queueIsEmpty = (queue: Queue) => false
+
+/// Número de nodos de la cola (`size`).
+provide let queueSize = (queue: Queue) => 0
