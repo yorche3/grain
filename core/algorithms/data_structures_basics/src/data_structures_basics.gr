@@ -71,6 +71,52 @@ provide let nodeWithNext = (node: Node, next: Node) => {
 }
 
 // ---------------------------------------------------------------------------
+// Helpers internos: recorren la cadena con recursión de cola
+// ---------------------------------------------------------------------------
+
+// Reengancha `values` (en orden inverso) delante de `next`. Llamada de cola.
+let rec relink = (values: List<Number>, next: Option<Node>) => {
+  match (values) {
+    [] => next,
+    [value, ...rest] => relink(rest, Some({ value, next })),
+  }
+}
+
+// Última celda de una cadena. Llamada de cola.
+let rec lastNode = (node: Node) => {
+  match (nodeNext(node)) {
+    None => node,
+    Some(next) => lastNode(next),
+  }
+}
+
+// Valores de la cadena hasta la cola, en orden inverso. Llamada de cola.
+let rec collectToTail = (node: Option<Node>, acc: List<Number>) => {
+  match (node) {
+    None => acc,
+    Some(current) =>
+      match (nodeNext(current)) {
+        None => [nodeValue(current), ...acc],
+        Some(next) => collectToTail(Some(next), [nodeValue(current), ...acc]),
+      },
+  }
+}
+
+// Prefijo anterior a la primera aparición de `value` (en orden inverso), el
+// resto de la cadena y si se encontró. Llamada de cola.
+let rec takePrefix = (node: Option<Node>, value: Number, acc: List<Number>) => {
+  match (node) {
+    None => (false, acc, None),
+    Some(current) =>
+      if (nodeValue(current) == value) {
+        (true, acc, nodeNext(current))
+      } else {
+        takePrefix(nodeNext(current), value, [nodeValue(current), ...acc])
+      },
+  }
+}
+
+// ---------------------------------------------------------------------------
 // LinkedList
 // ---------------------------------------------------------------------------
 
@@ -80,7 +126,7 @@ provide let linkedListInit = () => {
 }
 
 /// Valor de la cabeza, o `-1` si la lista está vacía (`get_head`).
-provide let linkedListHead = (list: LinkedList) => 
+provide let linkedListHead = (list: LinkedList) =>
   match (list.head) {
     Some(node) => nodeValue(node),
     None => -1,
@@ -89,41 +135,52 @@ provide let linkedListHead = (list: LinkedList) =>
 /// Inserta el valor al principio de la lista (`insert_head`).
 provide let linkedListInsertHead = (list: LinkedList, value: Number) => {
   let newNode = nodeInit(value)
-  match (list.head) {
-    None => { head: Some(newNode), tail: Some(newNode), count: 1 },
-    Some(oldHead) => { head: Some(newNode), tail: list.tail, count: list.count + 1 },
+  let newHead = match (list.head) {
+    None => newNode,
+    Some(oldHead) => nodeWithNext(newNode, oldHead),
   }
+  let newTail = match (list.tail) {
+    None => Some(newHead),
+    Some(_) => list.tail,
+  }
+  { head: Some(newHead), tail: newTail, count: list.count + 1 }
 }
 
 /// Inserta el valor al final de la lista (`insert_tail`).
+///
+/// Grain es inmutable: la celda de cola no se puede enlazar en el sitio, así que
+/// se reconstruye el camino hasta ella (O(n); ver adaptaciones en el README).
 provide let linkedListInsertTail = (list: LinkedList, value: Number) => {
-  let newNode = nodeInit(value)
-  match (list.tail) {
-    None => { head: Some(newNode), tail: Some(newNode), count: 1 },
-    Some(oldTail) => { head: list.head, tail: Some(newNode), count: list.count + 1 },
+  let newTail = nodeInit(value)
+  match (list.head) {
+    None => { head: Some(newTail), tail: Some(newTail), count: 1 },
+    Some(_) => {
+      let values = collectToTail(list.head, [])
+      let newHead = relink(values, Some(newTail))
+      { head: newHead, tail: Some(newTail), count: list.count + 1 }
+    },
   }
 }
 
 /// Elimina la primera aparición: `(true, lista resultante)` si estaba, y
 /// `(false, la misma lista)` si el valor no está (`delete`).
 provide let linkedListDelete = (list: LinkedList, value: Number) => {
-  let rec deleteNode = (node: Option<Node>, value: Number) => {
-    match (node) {
-      None => (false, None),
-      Some(n) =>
-        if (nodeValue(n) == value) {
-          (true, nodeNext(n))
-        } else {
-          let (removed, next) = deleteNode(nodeNext(n), value)
-          (removed, Some({ ...n, next }))
-        },
-    }
-  }
-  let (removed, newHead) = deleteNode(list.head, value)
-  if (removed) {
-    (true, { head: newHead, tail: list.tail, count: list.count - 1 })
-  } else {
-    (false, list)
+  match (list.head) {
+    None => (false, list),
+    Some(head) => {
+      let (removed, prefix, rest) = takePrefix(Some(head), value, [])
+      if (removed) {
+        let newHead = relink(prefix, rest)
+        let newTail = match (newHead) {
+          None => None,
+          Some(node) => Some(lastNode(node)),
+        }
+        (true, { head: newHead, tail: newTail, count: list.count - 1 })
+      } else {
+        // El valor ausente no toca la lista: se devuelve la misma instancia.
+        (false, list)
+      }
+    },
   }
 }
 
@@ -145,10 +202,11 @@ provide let stackInit = () => {
 /// Apila el valor sobre el tope (`push`).
 provide let stackPush = (stack: Stack, value: Number) => {
   let newNode = nodeInit(value)
-  match (stack.top) {
-    None => { top: Some(newNode), count: 1 },
-    Some(oldTop) => { top: Some(newNode), count: stack.count + 1 },
+  let newTop = match (stack.top) {
+    None => newNode,
+    Some(oldTop) => nodeWithNext(newNode, oldTop),
   }
+  { top: Some(newTop), count: stack.count + 1 }
 }
 
 /// Extrae el tope: `(valor, pila)`; si la pila está vacía, `(-1, la misma pila)`
@@ -184,13 +242,17 @@ provide let queueInit = () => {
 }
 
 /// Encola el valor por el final (`enqueue`).
+///
+/// Misma adaptación que `linkedListInsertTail`: encolar reconstruye el camino
+/// hasta el `rear` (O(n) en vez del O(1) que promete la especificación).
 provide let queueEnqueue = (queue: Queue, value: Number) => {
-  let newNode = nodeInit(value)
-  match (queue.rear) {
-    None => { front: Some(newNode), rear: Some(newNode), count: 1 },
-    Some(oldRear) => {
-      nodeSetNext(oldRear, Some(newNode))
-      { front: queue.front, rear: Some(newNode), count: queue.count + 1 }
+  let newRear = nodeInit(value)
+  match (queue.front) {
+    None => { front: Some(newRear), rear: Some(newRear), count: 1 },
+    Some(_) => {
+      let values = collectToTail(queue.front, [])
+      let newFront = relink(values, Some(newRear))
+      { front: newFront, rear: Some(newRear), count: queue.count + 1 }
     },
   }
 }
@@ -200,10 +262,13 @@ provide let queueEnqueue = (queue: Queue, value: Number) => {
 provide let queueDequeue = (queue: Queue) => {
   match (queue.front) {
     None => (-1, queue),
-    Some(n) => {
-      let newFront = nodeNext(n)
-      let newRear = if (newFront == None) { None } else { queue.rear }
-      (nodeValue(n), { front: newFront, rear: newRear, count: queue.count - 1 })
+    Some(node) => {
+      let newFront = nodeNext(node)
+      let newRear = match (newFront) {
+        None => None,
+        Some(_) => queue.rear,
+      }
+      (nodeValue(node), { front: newFront, rear: newRear, count: queue.count - 1 })
     },
   }
 }
