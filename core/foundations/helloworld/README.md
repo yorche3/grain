@@ -47,7 +47,7 @@ grain/
 |---------|-----|-------|
 | Scaffolding | `alire.toml` + `hello_world.gpr` + `.gitignore` | No requiere archivos de proyecto para programas simples |
 | Compilación | `gprbuild -P hello_world.gpr` | `grain compile hello_world.gr` |
-| Ejecución | `./bin/hello_world` | `grain run hello_world.gr` o `wasmtime hello_world.gr.wasm` |
+| Ejecución | `./bin/hello_world` | `grain hello_world.gr` (compila y ejecuta en un paso) |
 | Archivos mínimos | 3 archivos (fuente + proyecto + manifiesto) | 1 archivo (solo fuente) |
 | Salida generada | Ejecutable nativo en `bin/` | WebAssembly (`.wasm`) |
 
@@ -71,7 +71,7 @@ grain/
 
 ```bash
 # Desde grain/core/foundations/helloworld/
-grain run hello_world.gr
+grain hello_world.gr
 ```
 
 **Salida esperada / Expected output:**
@@ -83,14 +83,11 @@ Hello, World! from Grain!
 ### Compilar y ejecutar por separado
 
 ```bash
-# Compilar (genera hello_world.gr.wasm)
+# Compilar (genera hello_world.gro, hello_world.wasm y target/)
 grain compile hello_world.gr
 
-# Ejecutar con el runtime de Grain
-grain hello_world.gr.wasm
-
-# O ejecutar con wasmtime
-wasmtime hello_world.gr.wasm
+# Ejecutar el wasm compilado con el runtime de Grain
+grain run hello_world.wasm
 ```
 
 **Salida esperada / Expected output:**
@@ -103,7 +100,7 @@ Hello, World! from Grain!
 
 ```bash
 # Desde la raíz del repositorio
-grain run grain/core/foundations/helloworld/hello_world.gr
+grain grain/core/foundations/helloworld/hello_world.gr
 ```
 
 ---
@@ -112,6 +109,8 @@ grain run grain/core/foundations/helloworld/hello_world.gr
 
 - **ES:** Grain usa `print` de la biblioteca estándar (Prelude) para imprimir en consola, de forma similar a Python. No requiere `import` explícito porque `print` está en el alcance global por defecto.
 - **EN:** Grain uses `print` from the standard library (Prelude) to print to the console, similar to Python. No explicit `import` is needed because `print` is in the global scope by default.
+- **ES:** La compilación deja `hello_world.gro`, `hello_world.wasm` y `target/` en la carpeta del módulo: los tres figuran en el `.gitignore` del módulo y no se versionan.
+- **EN:** Compiling leaves `hello_world.gro`, `hello_world.wasm` and `target/` in the module folder: all three are listed in the module's `.gitignore` and are not versioned.
 - **ES:** Todo archivo Grain debe declarar un módulo con `module NombreDelModulo`. El nombre del módulo no tiene que coincidir con el nombre del archivo, pero por convención se usa el mismo nombre.
 - **EN:** Every Grain file must declare a module with `module ModuleName`. The module name does not have to match the file name, but by convention the same name is used.
 - **ES:** A diferencia de Go (que compila a ejecutable nativo) o Java/Ada (que también generan código nativo), Grain compila a **WebAssembly** (`.wasm`), lo que permite ejecutar el mismo binario en cualquier plataforma con un runtime WASM.
