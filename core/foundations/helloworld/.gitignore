@@ -1,0 +1,4 @@
+# Salidas de la compilación / Compilation output
+*.gro
+*.wasm
+target/
