@@ -1,4 +1,4 @@
-.PHONY: all build run clean
+.PHONY: all build run test clean
 
 all: build
 
@@ -12,3 +12,5 @@ clean:
 	rm -rf target/
 	rm -f tests/*.wasm tests/*.gro tests/*.wasm.map
 	rm -f src/*.gro
+
+test: run
