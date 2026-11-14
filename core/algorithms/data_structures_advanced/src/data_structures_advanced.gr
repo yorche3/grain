@@ -1,1 +1,86 @@
+// data_structures_advanced.gr — Árbol binario de búsqueda y grafo dirigido
+//
+// Especificación: 07_Data_Structures_Advanced. Contrato (paso 4b): tipos y
+// firmas; cada cuerpo devuelve el indicador neutro hasta la implementación.
+//
+// Ausencia: None. Banderas: false. Contadores: 0. graphAddEdge: (éxito, grafo).
 module DataStructuresAdvanced
+
+// Types
+
+abstract record rec TreeNode {
+  value: Number,
+  left: Option<TreeNode>,
+  right: Option<TreeNode>,
+}
+
+abstract record BinaryTree {
+  root: Option<TreeNode>,
+  count: Number,
+}
+
+// Interno a Graph: registro canónico y adyacencia ordenada.
+record rec GraphNode {
+  label: Number,
+  neighbors: List<Number>,
+  nextVertex: Option<GraphNode>,
+}
+
+abstract record Graph {
+  vertices: Option<GraphNode>,
+  vertexCount: Number,
+  edgeCount: Number,
+}
+
+// TreeNode
+
+provide let treeNodeInit = (value: Number) => {
+  { value: 0, left: None, right: None }
+}
+
+provide let treeNodeValue = (node: TreeNode) => 0
+
+provide let treeNodeLeft = (node: TreeNode) => None
+
+provide let treeNodeRight = (node: TreeNode) => None
+
+provide let treeNodeWithLeft = (node: TreeNode, left: Option<TreeNode>) => node
+
+provide let treeNodeWithRight = (node: TreeNode, right: Option<TreeNode>) => node
+
+// BinaryTree
+
+provide let binaryTreeInit = () => {
+  { root: None, count: 0 }
+}
+
+provide let binaryTreeInsert = (tree: BinaryTree, value: Number) => tree
+
+provide let binaryTreeContains = (tree: BinaryTree, value: Number) => false
+
+provide let binaryTreeIsEmpty = (tree: BinaryTree) => false
+
+provide let binaryTreeSize = (tree: BinaryTree) => 0
+
+// Graph
+
+provide let graphInit = () => {
+  { vertices: None, vertexCount: 0, edgeCount: 0 }
+}
+
+provide let graphAddVertex = (graph: Graph, label: Number) => graph
+
+provide let graphAddEdge = (graph: Graph, u: Number, v: Number) => {
+  (false, graph)
+}
+
+provide let graphHasEdge = (graph: Graph, u: Number, v: Number) => false
+
+/// None si el vértice no existe; Some([]) si está aislado.
+provide let graphGetNeighbors = (graph: Graph, label: Number) => None
+
+provide let graphIsEmpty = (graph: Graph) => false
+
+provide let graphVertexCount = (graph: Graph) => 0
+
+provide let graphEdgeCount = (graph: Graph) => 0
