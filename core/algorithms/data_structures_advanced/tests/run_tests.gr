@@ -1,10 +1,11 @@
 module RunTests
 
+from "./data_structures_advanced_test.gr" include DataStructuresAdvancedTest
 from "./testing.gr" include Testing
 
-// Step 4c will add test groups here.
-// from "./data_structures_advanced_test.gr" include DataStructuresAdvancedTest
-// Testing.runTests(DataStructuresAdvancedTest.binaryTreeTests)
-// Testing.runTests(DataStructuresAdvancedTest.graphTests)
+// Orden de la especificación: TreeNode, BinaryTree y Graph.
+Testing.runTests(DataStructuresAdvancedTest.treeNodeTests)
+Testing.runTests(DataStructuresAdvancedTest.binaryTreeTests)
+Testing.runTests(DataStructuresAdvancedTest.graphTests)
 
 Testing.printSummary()
