@@ -35,18 +35,22 @@ abstract record Graph {
 // TreeNode
 
 provide let treeNodeInit = (value: Number) => {
-  { value: 0, left: None, right: None }
+  { value: value, left: None, right: None }
 }
 
-provide let treeNodeValue = (node: TreeNode) => 0
+provide let treeNodeValue = (node: TreeNode) => node.value
 
-provide let treeNodeLeft = (node: TreeNode) => None
+provide let treeNodeLeft = (node: TreeNode) => node.left
 
-provide let treeNodeRight = (node: TreeNode) => None
+provide let treeNodeRight = (node: TreeNode) => node.right
 
-provide let treeNodeWithLeft = (node: TreeNode, left: Option<TreeNode>) => node
+provide let treeNodeWithLeft = (node: TreeNode, left: Option<TreeNode>) => {
+  { ...node, left: left }
+}
 
-provide let treeNodeWithRight = (node: TreeNode, right: Option<TreeNode>) => node
+provide let treeNodeWithRight = (node: TreeNode, right: Option<TreeNode>) => {
+  { ...node, right: right }
+}
 
 // BinaryTree
 
@@ -54,13 +58,56 @@ provide let binaryTreeInit = () => {
   { root: None, count: 0 }
 }
 
-provide let binaryTreeInsert = (tree: BinaryTree, value: Number) => tree
+let rec insertNode = (value: Number, node: Option<TreeNode>) => {
+  match (node) {
+    None => (Some(treeNodeInit(value)), true),
+    Some(n) => {
+      let v = treeNodeValue(n)
+      if (value == v) {
+        (Some(n), false)
+      } else if (value < v) {
+        let (newLeft, inserted) = insertNode(value, treeNodeLeft(n))
+        (Some(treeNodeWithLeft(n, newLeft)), inserted)
+      } else {
+        let (newRight, inserted) = insertNode(value, treeNodeRight(n))
+        (Some(treeNodeWithRight(n, newRight)), inserted)
+      }
+    },
+  }
+}
 
-provide let binaryTreeContains = (tree: BinaryTree, value: Number) => false
+provide let binaryTreeInsert = (tree: BinaryTree, value: Number) => {
+  let (newRoot, inserted) = insertNode(value, tree.root)
+  let count = if (inserted) {
+    tree.count + 1
+  } else {
+    tree.count
+  }
+  { root: newRoot, count: count }
+}
 
-provide let binaryTreeIsEmpty = (tree: BinaryTree) => false
+let rec containsNode = (value: Number, node: Option<TreeNode>) => {
+  match (node) {
+    None => false,
+    Some(n) => {
+      let v = treeNodeValue(n)
+      if (value == v) {
+        true
+      } else if (value < v) {
+        containsNode(value, treeNodeLeft(n))
+      } else {
+        containsNode(value, treeNodeRight(n))
+      }
+    },
+  }
+}
 
-provide let binaryTreeSize = (tree: BinaryTree) => 0
+provide let binaryTreeContains = (tree: BinaryTree, value: Number) =>
+  containsNode(value, tree.root)
+
+provide let binaryTreeIsEmpty = (tree: BinaryTree) => tree.count == 0
+
+provide let binaryTreeSize = (tree: BinaryTree) => tree.count
 
 // Graph
 
@@ -68,19 +115,121 @@ provide let graphInit = () => {
   { vertices: None, vertexCount: 0, edgeCount: 0 }
 }
 
-provide let graphAddVertex = (graph: Graph, label: Number) => graph
-
-provide let graphAddEdge = (graph: Graph, u: Number, v: Number) => {
-  (false, graph)
+let rec findVertex = (label: Number, node: Option<GraphNode>) => {
+  match (node) {
+    None => None,
+    Some(n) =>
+      if (n.label == label) {
+        Some(n)
+      } else {
+        findVertex(label, n.nextVertex)
+      },
+  }
 }
 
-provide let graphHasEdge = (graph: Graph, u: Number, v: Number) => false
+provide let graphAddVertex = (graph: Graph, label: Number) => {
+  match (findVertex(label, graph.vertices)) {
+    Some(_) => graph,
+    None => {
+      let newNode: GraphNode = {
+        label: label,
+        neighbors: [],
+        nextVertex: graph.vertices,
+      }
+      {
+        vertices: Some(newNode),
+        vertexCount: graph.vertexCount + 1,
+        edgeCount: graph.edgeCount,
+      }
+    },
+  }
+}
+
+let rec insertSorted = (value: Number, sorted: List<Number>) => {
+  match (sorted) {
+    [] => [value],
+    [head, ...tail] =>
+      if (value < head) {
+        [value, head, ...tail]
+      } else if (value > head) {
+        [head, ...insertSorted(value, tail)]
+      } else {
+        sorted
+      },
+  }
+}
+
+let rec updateNeighbors = (
+  label: Number,
+  newNeighbors: List<Number>,
+  node: Option<GraphNode>,
+) => {
+  match (node) {
+    None => None,
+    Some(n) =>
+      if (n.label == label) {
+        Some({ ...n, neighbors: newNeighbors })
+      } else {
+        Some({
+          ...n,
+          nextVertex: updateNeighbors(label, newNeighbors, n.nextVertex),
+        })
+      },
+  }
+}
+
+let rec hasNeighbor = (label: Number, neighbors: List<Number>) => {
+  match (neighbors) {
+    [] => false,
+    [head, ...tail] => head == label || hasNeighbor(label, tail),
+  }
+}
+
+provide let graphAddEdge = (graph: Graph, u: Number, v: Number) => {
+  match (findVertex(u, graph.vertices)) {
+    None => (false, graph),
+    Some(uNode) =>
+      match (findVertex(v, graph.vertices)) {
+        None => (false, graph),
+        Some(_) =>
+          if (hasNeighbor(v, uNode.neighbors)) {
+            (true, graph)
+          } else {
+            let newVertices = updateNeighbors(
+              u,
+              insertSorted(v, uNode.neighbors),
+              graph.vertices,
+            )
+            (
+              true,
+              { ...graph, vertices: newVertices, edgeCount: graph.edgeCount + 1 },
+            )
+          },
+      },
+  }
+}
+
+provide let graphHasEdge = (graph: Graph, u: Number, v: Number) => {
+  match (findVertex(u, graph.vertices)) {
+    None => false,
+    Some(uNode) =>
+      match (findVertex(v, graph.vertices)) {
+        None => false,
+        Some(_) => hasNeighbor(v, uNode.neighbors),
+      },
+  }
+}
 
 /// None si el vértice no existe; Some([]) si está aislado.
-provide let graphGetNeighbors = (graph: Graph, label: Number) => None
+provide let graphGetNeighbors = (graph: Graph, label: Number) => {
+  match (findVertex(label, graph.vertices)) {
+    None => None,
+    Some(node) => Some(node.neighbors),
+  }
+}
 
-provide let graphIsEmpty = (graph: Graph) => false
+provide let graphIsEmpty = (graph: Graph) => graph.vertexCount == 0
 
-provide let graphVertexCount = (graph: Graph) => 0
+provide let graphVertexCount = (graph: Graph) => graph.vertexCount
 
-provide let graphEdgeCount = (graph: Graph) => 0
+provide let graphEdgeCount = (graph: Graph) => graph.edgeCount
