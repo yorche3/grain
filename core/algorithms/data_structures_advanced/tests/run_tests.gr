@@ -1,0 +1,10 @@
+module RunTests
+
+from "./testing.gr" include Testing
+
+// Step 4c will add test groups here.
+// from "./data_structures_advanced_test.gr" include DataStructuresAdvancedTest
+// Testing.runTests(DataStructuresAdvancedTest.binaryTreeTests)
+// Testing.runTests(DataStructuresAdvancedTest.graphTests)
+
+Testing.printSummary()
