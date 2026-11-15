@@ -9,7 +9,7 @@ Proyectos en **Grain**, un lenguaje funcional que compila a WebAssembly.
 | Módulo | Descripción |
 |--------|-------------|
 | [`core/foundations/`](core/foundations/) | **Fase 0 — Fundamentos**: `hello_world`, `calculator`, `numbers` |
-| [`core/algorithms/`](core/algorithms/) | **Fase 1 — Algoritmos Puros**: `naive_sort`, `data_structures_basics` |
+| [`core/algorithms/`](core/algorithms/) | **Fase 1 — Algoritmos Puros**: `naive_sort`, `data_structures_basics`, `data_structures_advanced` |
 
 > **ES:** `hello_user` (02_Hello_User) **no se implementa** en Grain: el lenguaje no ofrece, a la fecha, una forma de leer entrada interactiva desde la consola (`stdin`) en la biblioteca estándar. El resto de los módulos de fundamentos, que no requieren entrada del usuario, sí se implementan con normalidad.
 >
@@ -38,6 +38,10 @@ make test
 
 # Data Structures Basics Tests
 cd core/algorithms/data_structures_basics
+make test
+
+# Data Structures Advanced Tests
+cd core/algorithms/data_structures_advanced
 make test
 ```
 
