@@ -1,0 +1,101 @@
+module Testing
+
+from "list" include List
+
+// ---------------------------------------------------------------------------
+// Casos y grupos
+// ---------------------------------------------------------------------------
+
+provide enum CaseOutcome {
+  NumberCase(Number),
+  BoolCase(Bool),
+}
+
+provide record TestCase {
+  description: String,
+  run: () => CaseOutcome,
+  expected: CaseOutcome,
+}
+
+provide record TestGroup {
+  name: String,
+  cases: List<TestCase>,
+}
+
+provide let checkNumber = (
+  description: String,
+  run: () => Number,
+  expected: Number,
+) => {
+  { description, run: () => NumberCase(run()), expected: NumberCase(expected) }
+}
+
+provide let checkBool = (description: String, run: () => Bool, expected: Bool) => {
+  { description, run: () => BoolCase(run()), expected: BoolCase(expected) }
+}
+
+// ---------------------------------------------------------------------------
+// Ejecución
+// ---------------------------------------------------------------------------
+
+let mut globalPassed = 0
+let mut globalFailed = 0
+let mut globalTotal = 0
+
+let outcomeToString = (outcome) => {
+  match (outcome) {
+    NumberCase(number) => toString(number),
+    BoolCase(flag) => toString(flag),
+  }
+}
+
+provide let runGroup = (group: TestGroup) => {
+  let mut groupPassed = 0
+  let mut groupFailed = 0
+  print("\n▸ " ++ group.name)
+  List.forEach((testCase: TestCase) => {
+    globalTotal += 1
+    let actual = testCase.run()
+    if (actual == testCase.expected) {
+      groupPassed += 1
+      globalPassed += 1
+      print("  ✓ " ++ testCase.description)
+    } else {
+      groupFailed += 1
+      globalFailed += 1
+      print(
+        "  ✗ " ++
+        testCase.description ++
+        " — expected " ++
+        outcomeToString(testCase.expected) ++
+        ", got " ++
+        outcomeToString(actual),
+      )
+    }
+  }, group.cases)
+  print(
+    "  → " ++
+    toString(groupPassed) ++
+    " passed, " ++
+    toString(groupFailed) ++
+    " failed",
+  )
+}
+
+provide let runTests = (suite: List<TestGroup>) => {
+  List.forEach((group: TestGroup) => runGroup(group), suite)
+}
+
+provide let printSummary = () => {
+  print("\n--- Test Summary ---")
+  print(
+    "Cases: " ++
+    toString(globalPassed) ++
+    " passed, " ++
+    toString(globalFailed) ++
+    " failed, " ++
+    toString(globalTotal) ++
+    " total",
+  )
+  globalFailed == 0
+}

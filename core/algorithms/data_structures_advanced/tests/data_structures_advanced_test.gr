@@ -1,0 +1,600 @@
+module DataStructuresAdvancedTest
+
+from "../src/data_structures_advanced.gr" include DataStructuresAdvanced
+from "./testing.gr" include Testing
+from "list" include List
+
+use DataStructuresAdvanced.*
+use Testing.*
+
+// Grupos en el orden de la especificación: TreeNode, BinaryTree y Graph.
+// Cada caso de la tabla es un grupo con instancias propias (inmutables, así
+// que no se comparte estado) y sus pasos como aserciones nombradas.
+// Ausencia = None; fallo de contains/has_edge = false; insert devuelve el
+// árbol, así que "éxito" se observa con contains/size.
+
+let valueOr = (link) => {
+  match (link) {
+    Some(node) => treeNodeValue(node),
+    None => -1,
+  }
+}
+
+let isNone = (link) => {
+  match (link) {
+    Some(_) => false,
+    None => true,
+  }
+}
+
+let leftOf = (link) => {
+  match (link) {
+    Some(node) => treeNodeLeft(node),
+    None => None,
+  }
+}
+
+let rightOf = (link) => {
+  match (link) {
+    Some(node) => treeNodeRight(node),
+    None => None,
+  }
+}
+
+// ===========================================================================
+// TreeNode — 6 casos
+// ===========================================================================
+
+let nodeTen = treeNodeInit(10)
+let nodeTwenty = treeNodeInit(20)
+let nodeThirty = treeNodeInit(30)
+let parentLinked = treeNodeWithRight(
+  treeNodeWithLeft(treeNodeInit(10), Some(treeNodeInit(20))),
+  Some(treeNodeInit(30)),
+)
+let parentAllLinked = treeNodeWithRight(
+  treeNodeWithLeft(nodeTen, Some(nodeTwenty)),
+  Some(nodeThirty),
+)
+let parentLeftCleared = treeNodeWithLeft(parentAllLinked, None)
+let parentBothCleared = treeNodeWithRight(parentLeftCleared, None)
+let parentOnlyLeft = treeNodeWithLeft(nodeTen, Some(nodeTwenty))
+
+provide let treeNodeTests = [
+  {
+    name: "TreeNode — caso 1: crear un nodo de árbol",
+    cases: [checkNumber("get_value = 10", () => treeNodeValue(nodeTen), 10)],
+  },
+  {
+    name: "TreeNode — caso 2: enlaces iniciales ausentes",
+    cases: [
+      checkBool(
+        "get_left del nodo nuevo es ausente",
+        () => isNone(treeNodeLeft(nodeTen)),
+        true,
+      ),
+      checkBool(
+        "get_right del nodo nuevo es ausente",
+        () => isNone(treeNodeRight(nodeTen)),
+        true,
+      ),
+    ],
+  },
+  {
+    name: "TreeNode — caso 3: enlazar dos hijos",
+    cases: [
+      checkNumber(
+        "get_value(get_left) = 20",
+        () => valueOr(treeNodeLeft(parentLinked)),
+        20,
+      ),
+      checkNumber(
+        "get_value(get_right) = 30",
+        () => valueOr(treeNodeRight(parentLinked)),
+        30,
+      ),
+    ],
+  },
+  {
+    name: "TreeNode — caso 4: recorrer cada enlace",
+    cases: [
+      checkNumber(
+        "el hijo izquierdo lleva a 20",
+        () => valueOr(treeNodeLeft(parentLinked)),
+        20,
+      ),
+      checkNumber(
+        "el hijo derecho lleva a 30",
+        () => valueOr(treeNodeRight(parentLinked)),
+        30,
+      ),
+      checkBool(
+        "los enlaces del hijo izquierdo son ausentes",
+        () =>
+          isNone(leftOf(treeNodeLeft(parentLinked))) &&
+          isNone(rightOf(treeNodeLeft(parentLinked))),
+        true,
+      ),
+      checkBool(
+        "los enlaces del hijo derecho son ausentes",
+        () =>
+          isNone(leftOf(treeNodeRight(parentLinked))) &&
+          isNone(rightOf(treeNodeRight(parentLinked))),
+        true,
+      ),
+    ],
+  },
+  {
+    name: "TreeNode — caso 5: desenlazar hijos",
+    cases: [
+      checkBool(
+        "al quitar el izquierdo, get_left es ausente",
+        () => isNone(treeNodeLeft(parentLeftCleared)),
+        true,
+      ),
+      checkNumber(
+        "al quitar el izquierdo, el valor 10 se conserva",
+        () => treeNodeValue(parentLeftCleared),
+        10,
+      ),
+      checkNumber(
+        "al quitar el izquierdo, el derecho 30 se conserva",
+        () => valueOr(treeNodeRight(parentLeftCleared)),
+        30,
+      ),
+      checkBool(
+        "al quitar el derecho, ambos enlaces son ausentes",
+        () =>
+          isNone(treeNodeLeft(parentBothCleared)) &&
+          isNone(treeNodeRight(parentBothCleared)),
+        true,
+      ),
+      checkNumber(
+        "al quitar el derecho, el valor 10 se conserva",
+        () => treeNodeValue(parentBothCleared),
+        10,
+      ),
+    ],
+  },
+  {
+    name: "TreeNode — caso 6: adaptación inmutable",
+    cases: [
+      checkNumber(
+        "el nodo nuevo lleva el enlace izquierdo 20",
+        () => valueOr(treeNodeLeft(parentOnlyLeft)),
+        20,
+      ),
+      checkBool(
+        "el original no cambia: get_left sigue ausente",
+        () => isNone(treeNodeLeft(nodeTen)),
+        true,
+      ),
+    ],
+  },
+]
+
+// ===========================================================================
+// BinaryTree — 7 casos
+// ===========================================================================
+
+let emptyTree = binaryTreeInit()
+
+let treeRoot = binaryTreeInsert(binaryTreeInit(), 50)
+
+let treeLowHigh = binaryTreeInsert(
+  binaryTreeInsert(binaryTreeInsert(binaryTreeInit(), 50), 30),
+  70,
+)
+
+let treeMulti = binaryTreeInsert(
+  binaryTreeInsert(treeLowHigh, 20),
+  40,
+)
+
+let treeDuplicate = binaryTreeInsert(treeLowHigh, 30)
+
+let treeOrdered = binaryTreeInsert(
+  binaryTreeInsert(
+    binaryTreeInsert(
+      binaryTreeInsert(binaryTreeInsert(binaryTreeInit(), 20), 30),
+      40,
+    ),
+    50,
+  ),
+  70,
+)
+
+provide let binaryTreeTests = [
+  {
+    name: "BinaryTree — caso 1: crear vacío",
+    cases: [
+      checkBool("is_empty = true", () => binaryTreeIsEmpty(emptyTree), true),
+      checkNumber("size = 0", () => binaryTreeSize(emptyTree), 0),
+      checkBool(
+        "contains(50) falla",
+        () => binaryTreeContains(emptyTree, 50),
+        false,
+      ),
+    ],
+  },
+  {
+    name: "BinaryTree — caso 2: insertar la raíz",
+    cases: [
+      checkNumber("size = 1", () => binaryTreeSize(treeRoot), 1),
+      checkBool("is_empty = false", () => binaryTreeIsEmpty(treeRoot), false),
+      checkBool(
+        "contains(50) es éxito",
+        () => binaryTreeContains(treeRoot, 50),
+        true,
+      ),
+    ],
+  },
+  {
+    name: "BinaryTree — caso 3: insertar menor y mayor",
+    cases: [
+      checkNumber("size = 3", () => binaryTreeSize(treeLowHigh), 3),
+      checkBool(
+        "contains(50)",
+        () => binaryTreeContains(treeLowHigh, 50),
+        true,
+      ),
+      checkBool(
+        "contains(30)",
+        () => binaryTreeContains(treeLowHigh, 30),
+        true,
+      ),
+      checkBool(
+        "contains(70)",
+        () => binaryTreeContains(treeLowHigh, 70),
+        true,
+      ),
+    ],
+  },
+  {
+    name: "BinaryTree — caso 4: ramas de varios niveles",
+    cases: [
+      checkNumber("size = 5", () => binaryTreeSize(treeMulti), 5),
+      checkBool("contains(50)", () => binaryTreeContains(treeMulti, 50), true),
+      checkBool("contains(30)", () => binaryTreeContains(treeMulti, 30), true),
+      checkBool("contains(70)", () => binaryTreeContains(treeMulti, 70), true),
+      checkBool("contains(20)", () => binaryTreeContains(treeMulti, 20), true),
+      checkBool("contains(40)", () => binaryTreeContains(treeMulti, 40), true),
+    ],
+  },
+  {
+    name: "BinaryTree — caso 5: valor ausente en árbol no vacío",
+    cases: [
+      checkBool(
+        "contains(99) falla",
+        () => binaryTreeContains(treeRoot, 99),
+        false,
+      ),
+      checkNumber("size sigue en 1", () => binaryTreeSize(treeRoot), 1),
+      checkBool(
+        "contains(50) sigue en éxito",
+        () => binaryTreeContains(treeRoot, 50),
+        true,
+      ),
+    ],
+  },
+  {
+    name: "BinaryTree — caso 6: duplicado idempotente",
+    cases: [
+      checkNumber("size = 3", () => binaryTreeSize(treeDuplicate), 3),
+      checkBool(
+        "contains(50)",
+        () => binaryTreeContains(treeDuplicate, 50),
+        true,
+      ),
+      checkBool(
+        "contains(30)",
+        () => binaryTreeContains(treeDuplicate, 30),
+        true,
+      ),
+      checkBool(
+        "contains(70)",
+        () => binaryTreeContains(treeDuplicate, 70),
+        true,
+      ),
+    ],
+  },
+  {
+    name: "BinaryTree — caso 7: inserciones ordenadas",
+    cases: [
+      checkNumber("size = 5", () => binaryTreeSize(treeOrdered), 5),
+      checkBool(
+        "contains(20)",
+        () => binaryTreeContains(treeOrdered, 20),
+        true,
+      ),
+      checkBool(
+        "contains(30)",
+        () => binaryTreeContains(treeOrdered, 30),
+        true,
+      ),
+      checkBool(
+        "contains(40)",
+        () => binaryTreeContains(treeOrdered, 40),
+        true,
+      ),
+      checkBool(
+        "contains(50)",
+        () => binaryTreeContains(treeOrdered, 50),
+        true,
+      ),
+      checkBool(
+        "contains(70)",
+        () => binaryTreeContains(treeOrdered, 70),
+        true,
+      ),
+      checkBool(
+        "contains(99) falla",
+        () => binaryTreeContains(treeOrdered, 99),
+        false,
+      ),
+    ],
+  },
+]
+
+// ===========================================================================
+// Graph — 10 casos
+// ===========================================================================
+
+let emptyGraph = graphInit()
+
+let graphIsolated = graphAddVertex(graphInit(), 10)
+
+let graphTwo = (a, b) => graphAddVertex(graphAddVertex(graphInit(), a), b)
+
+// Caso 3
+let (directedOk, graphDirected) = graphAddEdge(graphTwo(10, 70), 10, 70)
+
+// Caso 4
+let (dupVertexEdgeOk, graphDupVertexEdge) = graphAddEdge(graphTwo(10, 30), 10, 30)
+let graphDupVertex = graphAddVertex(graphDupVertexEdge, 10)
+
+// Caso 5
+let (dupEdgeFirstOk, graphDupEdgeFirst) = graphAddEdge(graphTwo(10, 30), 10, 30)
+let (dupEdgeSecondOk, graphDupEdge) = graphAddEdge(graphDupEdgeFirst, 10, 30)
+
+// Caso 6
+let (missingBaseOk, graphMissingBase) = graphAddEdge(graphTwo(10, 30), 10, 30)
+let (missing1Ok, graphMissing1) = graphAddEdge(graphMissingBase, 10, 99)
+let (missing2Ok, graphMissing2) = graphAddEdge(graphMissing1, 99, 10)
+let (missing3Ok, graphMissing3) = graphAddEdge(graphMissing2, 98, 99)
+let (missing4Ok, graphMissing4) = graphAddEdge(graphMissing3, 99, 99)
+
+// Caso 7
+let graphFour = graphAddVertex(graphTwo(10, 30), 50)
+let graphFourAll = graphAddVertex(graphFour, 70)
+let (sorted1Ok, graphSorted1) = graphAddEdge(graphFourAll, 10, 70)
+let (sorted2Ok, graphSorted2) = graphAddEdge(graphSorted1, 10, 30)
+let (sorted3Ok, graphSorted3) = graphAddEdge(graphSorted2, 10, 50)
+let (sorted4Ok, graphSorted4) = graphAddEdge(graphSorted3, 30, 50)
+
+// Caso 8
+let graphNoEdge = graphTwo(10, 30)
+
+// Caso 10
+let graphLoopBase = graphAddVertex(graphInit(), 10)
+let (loopFirstOk, graphLoopFirst) = graphAddEdge(graphLoopBase, 10, 10)
+let (loopSecondOk, graphLoop) = graphAddEdge(graphLoopFirst, 10, 10)
+
+provide let graphTests = [
+  {
+    name: "Graph — caso 1: crear vacío",
+    cases: [
+      checkBool("is_empty = true", () => graphIsEmpty(emptyGraph), true),
+      checkNumber("vertex_count = 0", () => graphVertexCount(emptyGraph), 0),
+      checkNumber("edge_count = 0", () => graphEdgeCount(emptyGraph), 0),
+      checkBool(
+        "has_edge(10, 30) falla",
+        () => graphHasEdge(emptyGraph, 10, 30),
+        false,
+      ),
+      checkBool(
+        "get_neighbors(10) falla",
+        () => isNone(graphGetNeighbors(emptyGraph, 10)),
+        true,
+      ),
+    ],
+  },
+  {
+    name: "Graph — caso 2: vértice aislado",
+    cases: [
+      checkBool(
+        "grafo no vacío",
+        () => graphIsEmpty(graphIsolated),
+        false,
+      ),
+      checkNumber("1 vértice", () => graphVertexCount(graphIsolated), 1),
+      checkNumber("0 aristas", () => graphEdgeCount(graphIsolated), 0),
+      checkBool(
+        "vecinos de 10 vacíos",
+        () => graphGetNeighbors(graphIsolated, 10) == Some([]),
+        true,
+      ),
+    ],
+  },
+  {
+    name: "Graph — caso 3: etiquetas no consecutivas y arista dirigida",
+    cases: [
+      checkBool("add_edge(10, 70) es éxito", () => directedOk, true),
+      checkBool(
+        "has_edge(10, 70) es éxito",
+        () => graphHasEdge(graphDirected, 10, 70),
+        true,
+      ),
+      checkBool(
+        "has_edge(70, 10) falla",
+        () => graphHasEdge(graphDirected, 70, 10),
+        false,
+      ),
+      checkNumber("2 vértices", () => graphVertexCount(graphDirected), 2),
+      checkNumber("1 arista", () => graphEdgeCount(graphDirected), 1),
+    ],
+  },
+  {
+    name: "Graph — caso 4: vértice duplicado conserva adyacencia",
+    cases: [
+      checkBool("add_edge(10, 30) es éxito", () => dupVertexEdgeOk, true),
+      checkNumber(
+        "2 vértices",
+        () => graphVertexCount(graphDupVertex),
+        2,
+      ),
+      checkNumber("1 arista", () => graphEdgeCount(graphDupVertex), 1),
+      checkBool(
+        "vecinos de 10 = [30]",
+        () => graphGetNeighbors(graphDupVertex, 10) == Some([30]),
+        true,
+      ),
+    ],
+  },
+  {
+    name: "Graph — caso 5: arista duplicada",
+    cases: [
+      checkBool("primer add_edge(10, 30) es éxito", () => dupEdgeFirstOk, true),
+      checkBool(
+        "segundo add_edge(10, 30) es éxito",
+        () => dupEdgeSecondOk,
+        true,
+      ),
+      checkNumber("2 vértices", () => graphVertexCount(graphDupEdge), 2),
+      checkNumber("1 arista", () => graphEdgeCount(graphDupEdge), 1),
+      checkBool(
+        "vecinos de 10 = [30]",
+        () => graphGetNeighbors(graphDupEdge, 10) == Some([30]),
+        true,
+      ),
+    ],
+  },
+  {
+    name: "Graph — caso 6: extremo inexistente sin mutación",
+    cases: [
+      checkBool("add_edge(10, 30) es éxito", () => missingBaseOk, true),
+      checkBool("add_edge(10, 99) falla", () => missing1Ok, false),
+      checkBool("add_edge(99, 10) falla", () => missing2Ok, false),
+      checkBool("add_edge(98, 99) falla", () => missing3Ok, false),
+      checkBool("add_edge(99, 99) falla", () => missing4Ok, false),
+      checkNumber(
+        "siguen 2 vértices",
+        () => graphVertexCount(graphMissing4),
+        2,
+      ),
+      checkNumber("sigue 1 arista", () => graphEdgeCount(graphMissing4), 1),
+      checkBool(
+        "vecinos de 10 = [30]",
+        () => graphGetNeighbors(graphMissing4, 10) == Some([30]),
+        true,
+      ),
+      checkBool(
+        "vecinos de 30 vacíos",
+        () => graphGetNeighbors(graphMissing4, 30) == Some([]),
+        true,
+      ),
+      checkBool(
+        "las aristas intentadas siguen ausentes",
+        () =>
+          !graphHasEdge(graphMissing4, 10, 99) &&
+          !graphHasEdge(graphMissing4, 99, 10) &&
+          !graphHasEdge(graphMissing4, 98, 99) &&
+          !graphHasEdge(graphMissing4, 99, 99),
+        true,
+      ),
+      checkBool(
+        "get_neighbors(98) falla",
+        () => isNone(graphGetNeighbors(graphMissing4, 98)),
+        true,
+      ),
+      checkBool(
+        "get_neighbors(99) falla",
+        () => isNone(graphGetNeighbors(graphMissing4, 99)),
+        true,
+      ),
+    ],
+  },
+  {
+    name: "Graph — caso 7: vecinos ordenados y contadores",
+    cases: [
+      checkBool(
+        "las cuatro altas de arista son éxito",
+        () => sorted1Ok && sorted2Ok && sorted3Ok && sorted4Ok,
+        true,
+      ),
+      checkBool(
+        "vecinos de 10 = [30, 50, 70]",
+        () => graphGetNeighbors(graphSorted4, 10) == Some([30, 50, 70]),
+        true,
+      ),
+      checkBool(
+        "vecinos de 30 = [50]",
+        () => graphGetNeighbors(graphSorted4, 30) == Some([50]),
+        true,
+      ),
+      checkBool(
+        "vecinos de 50 vacíos",
+        () => graphGetNeighbors(graphSorted4, 50) == Some([]),
+        true,
+      ),
+      checkBool(
+        "vecinos de 70 vacíos",
+        () => graphGetNeighbors(graphSorted4, 70) == Some([]),
+        true,
+      ),
+      checkNumber("4 vértices", () => graphVertexCount(graphSorted4), 4),
+      checkNumber("4 aristas", () => graphEdgeCount(graphSorted4), 4),
+    ],
+  },
+  {
+    name: "Graph — caso 8: consulta de arista ausente",
+    cases: [
+      checkBool(
+        "has_edge(10, 30) falla",
+        () => graphHasEdge(graphNoEdge, 10, 30),
+        false,
+      ),
+      checkNumber("2 vértices", () => graphVertexCount(graphNoEdge), 2),
+      checkNumber("0 aristas", () => graphEdgeCount(graphNoEdge), 0),
+      checkBool("no vacío", () => graphIsEmpty(graphNoEdge), false),
+    ],
+  },
+  {
+    name: "Graph — caso 9: vecinos de vértice inexistente",
+    cases: [
+      checkBool(
+        "get_neighbors(99) falla",
+        () => isNone(graphGetNeighbors(graphIsolated, 99)),
+        true,
+      ),
+      checkBool(
+        "el fallo es distinto de los vecinos vacíos de 10",
+        () =>
+          graphGetNeighbors(graphIsolated, 99) !=
+          graphGetNeighbors(graphIsolated, 10),
+        true,
+      ),
+      checkNumber("1 vértice", () => graphVertexCount(graphIsolated), 1),
+      checkNumber("0 aristas", () => graphEdgeCount(graphIsolated), 0),
+    ],
+  },
+  {
+    name: "Graph — caso 10: bucle y duplicado",
+    cases: [
+      checkBool("primer add_edge(10, 10) es éxito", () => loopFirstOk, true),
+      checkBool("segundo add_edge(10, 10) es éxito", () => loopSecondOk, true),
+      checkBool(
+        "has_edge(10, 10) es éxito",
+        () => graphHasEdge(graphLoop, 10, 10),
+        true,
+      ),
+      checkBool(
+        "vecinos de 10 = [10]",
+        () => graphGetNeighbors(graphLoop, 10) == Some([10]),
+        true,
+      ),
+      checkNumber("1 vértice", () => graphVertexCount(graphLoop), 1),
+      checkNumber("1 arista", () => graphEdgeCount(graphLoop), 1),
+    ],
+  },
+]
